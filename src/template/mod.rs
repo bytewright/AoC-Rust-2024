@@ -20,6 +20,7 @@ pub const ANSI_RESET: &str = "\x1b[0m";
 pub fn read_file(folder: &str, day: Day) -> String {
     let cwd = env::current_dir().unwrap();
     let filepath = cwd.join("data").join(folder).join(format!("{day}.txt"));
+    println!("filepath: {filepath:?}");
     let f = fs::read_to_string(filepath);
     f.expect("could not open input file")
 }
