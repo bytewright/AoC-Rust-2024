@@ -1,0 +1,11 @@
+spring:
+    shell:
+        interactive:
+            enabled: true
+    application:
+        name: advent_of_code
+logging:
+    level:
+        org:
+            springframework:
+                shell: info

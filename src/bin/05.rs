@@ -27,6 +27,52 @@ pub fn part_one(input: &str) -> Option<u32> {
     Some(checksum)
 }
 
+pub fn part_two(input: &str) -> Option<u32> {
+    let data = load_input_data(input);
+    let rules = data.0;
+    let input_lines = data.1;
+    let mut correct_inputs = 0;
+    let mut checksum = 0;
+    let mut fixed_sequences = 0;
+    for (i, number_sequence) in input_lines.iter().enumerate() {
+        if verify_input(number_sequence.clone(), rules.clone()) {
+            correct_inputs += 1;
+            let middle_index = number_sequence.len() / 2;
+            println!(
+                "line {} is valid: {:?}, middle index  {}",
+                i, number_sequence, middle_index
+            );
+        } else {
+            println!("line {} is invalid: {:?}", i, number_sequence);
+            let mut sequence = number_sequence.clone();
+            loop {
+                let (is_changed, sequence) = fix_sequence(sequence.clone(), rules.clone());
+                if verify_input(sequence, rules.clone()) {
+                    correct_inputs += 1;
+                    fixed_sequences += 1;
+                    let middle_index = number_sequence.len() / 2;
+                    println!(
+                        "line {} got fixed: {:?}, middle index  {}",
+                        i, number_sequence, middle_index
+                    );
+                    let x = number_sequence.iter().nth(middle_index).unwrap();
+                    checksum += x;
+                    break;
+                }
+                if !is_changed {
+                    println!("Found unfixable row! {:?}", number_sequence);
+                    break;
+                }
+            }
+        }
+    }
+    println!(
+        "Found {} correct input lines ({} were fixable). checksum: {}",
+        correct_inputs, fixed_sequences, checksum
+    );
+    Some(checksum)
+}
+
 fn verify_input(number_sequence: Vec<u32>, rules: Vec<(u32, u32)>) -> bool {
     for rule in rules {
         let first: u32 = rule.0;
@@ -79,8 +125,28 @@ fn load_input_data(input: &str) -> (Vec<(u32, u32)>, Vec<Vec<u32>>) {
     (parsed_rules, input_lists)
 }
 
-pub fn part_two(_input: &str) -> Option<u32> {
-    None
+fn fix_sequence(mut number_sequence: Vec<u32>, rules: Vec<(u32, u32)>) -> (bool, Vec<u32>) {
+    for rule in rules {
+        let first: u32 = rule.0;
+        let second: u32 = rule.1;
+        let first_index = number_sequence.iter().position(|&x| x == first);
+        let second_index = number_sequence.iter().position(|&x| x == second);
+        if let (Some(first_pos), Some(second_pos)) = (first_index, second_index) {
+            if first_pos >= second_pos {
+                let first_elem = number_sequence.remove(first_pos);
+                println!(
+                    "Fixing sequence! {:?}, rule: {:?}, inserting {} at pos {}",
+                    number_sequence,
+                    rule,
+                    first_elem,
+                    second_pos
+                );
+                number_sequence.insert(second_pos, first_elem);
+                return (true, number_sequence);
+            }
+        }
+    }
+    (false, number_sequence)
 }
 
 #[cfg(test)]
@@ -96,6 +162,6 @@ mod tests {
     #[test]
     fn test_part_two() {
         let result = part_two(&advent_of_code::template::read_file("examples", DAY));
-        assert_eq!(result, None);
+        assert_eq!(result, Some(123));
     }
 }
